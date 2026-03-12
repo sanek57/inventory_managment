@@ -46,3 +46,7 @@ next-env.d.ts
 .prettier*
 /app/generated/prisma
 /lib/generated
+
+# stack auth
+.cursor
+.mcp.json
