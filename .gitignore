@@ -44,3 +44,5 @@ next-env.d.ts
 *.md
 .vscode
 .prettier*
+/app/generated/prisma
+/lib/generated
