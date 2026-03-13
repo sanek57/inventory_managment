@@ -6,3 +6,20 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Product {
+  id          String @id @default(cuid())
+  userId      String // Stack Auth
+  name        String
+  sku         String? @unique // уникальный номер товара
+  price       Decimal @db.Decimal(12,2)
+  quantity    Int @default(0)
+  lowStockAt  Int? // запасы товара
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связные данные
+  @@index([userId, name])
+  @@index([createdAt])
+}

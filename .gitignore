@@ -44,8 +44,11 @@ next-env.d.ts
 *.md
 .vscode
 .prettier*
+
+# prisma
 /app/generated/prisma
 /lib/generated
+/prisma/migrations
 
 # stack auth
 .cursor
