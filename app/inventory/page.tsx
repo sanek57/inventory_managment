@@ -1,4 +1,5 @@
 import { DeleteProductForm } from '@/components/DeleteButton'
+import Pagination from '@/components/Pagination'
 import Sidebar from '@/components/sidebar'
 // import { deleteProduct } from '@/lib/actions/products'
 import { getCurrentUser } from '@/lib/auth'
@@ -7,22 +8,41 @@ import prisma from '@/lib/prisma'
 export default async function InventoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; page?: string }>
 }) {
   const user = await getCurrentUser()
 
   const params = await searchParams
   const q = (params.q ?? '').trim()
 
-  const totalProduct = await prisma.product.findMany({
-    where: {
-      userId: user.id,
-      name: {
-        contains: q,
-        mode: 'insensitive',
+  const page = Math.max(1, Number(params.page ?? 1))
+  const pageSize = 5
+
+  const where = {
+    userId: user.id,
+    ...(q
+      ? {
+          name: {
+            contains: q,
+            mode: 'insensitive' as const,
+          },
+        }
+      : {}),
+  }
+
+  const [totalCount, items] = await Promise.all([
+    prisma.product.count({ where }),
+    prisma.product.findMany({
+      where,
+      orderBy: {
+        createdAt: 'desc',
       },
-    },
-  })
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  ])
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,7 +104,7 @@ export default async function InventoryPage({
                 </tr>
               </thead>
               <tbody className="bg-white devide-y devide-gray-200">
-                {totalProduct.map((product) => (
+                {items.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-500 ">
                       {product.name}
@@ -124,6 +144,19 @@ export default async function InventoryPage({
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                baseUrl={'/inventory'}
+                searchParams={{
+                  q,
+                  pageSize: String(pageSize),
+                }}
+              />
+            </div>
+          )}
         </div>
       </main>
     </div>
