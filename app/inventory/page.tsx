@@ -4,12 +4,23 @@ import Sidebar from '@/components/sidebar'
 import { getCurrentUser } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 
-export default async function InventoryPage() {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>
+}) {
   const user = await getCurrentUser()
+
+  const params = await searchParams
+  const q = (params.q ?? '').trim()
 
   const totalProduct = await prisma.product.findMany({
     where: {
       userId: user.id,
+      name: {
+        contains: q,
+        mode: 'insensitive',
+      },
     },
   })
 
@@ -32,6 +43,21 @@ export default async function InventoryPage() {
         </div>
 
         <div className="space-y-6">
+          {/* Search */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <form action="/inventory" method="GET" className="flex gap-2">
+              <input
+                type="text"
+                name="q"
+                placeholder="Search products...."
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-transparent"
+              />
+              <button className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                Search
+              </button>
+            </form>
+          </div>
+
           {/* Products Tabel */}
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <table className="w-full">
